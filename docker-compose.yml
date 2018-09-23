@@ -8,10 +8,11 @@ services:
       - "2181:2181"
       - "8081:8081"
       - "9581:9581"
-      - "9581:9582"
-      - "9581:9584"
-      - "9581:9585"
+      - "9582:9582"
+      - "9584:9584"
+      - "9585:9585"
       - "3030:3030"
     environment:
-      EULA: https://dl.lenses.stream/d/?id=ID_FROM_EMAIL_AFTER_SIGN_UP
+      EULA: "https://dl.lenses.stream/d/?id=48c8183c-759c-40bb-be70-35311dd146b0"
       ADV_HOST: 127.0.0.1
+      SAMPLEDATA: 0
