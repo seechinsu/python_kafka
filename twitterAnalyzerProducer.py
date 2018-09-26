@@ -5,17 +5,19 @@ import json
 from kafka import KafkaProducer
 import settings
 
-producer = KafkaProducer(bootstrap_servers='localhost:9092', api_version=(0, 10))
+producer = KafkaProducer(bootstrap_servers='localhost:9092',
+                         api_version=(0, 10),
+                         key_serializer=lambda k: json.dumps(k).encode('utf-8'),
+                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 topic_name = 'tweets-kafka'
 
 class StdOutListener(StreamListener):
     def on_data(self, data):
         dictData = json.loads(data)
-        msg = 'tweet_id: {tweet_id}, tweet: {tweet}'.format(tweet_id=dictData['id'], tweet=dictData['text'])
-        value = bytes(msg, encoding='utf-8')
-        key = bytes('raw', encoding='utf-8')
+        value = {'tweet_id': dictData['id'], 'tweet': dictData['text']}
+        key = 'raw'
         producer.send(topic_name, key=key, value=value)
-        print('sent msg: ' + msg)
+        print(value)
         return True
 
     def on_error(self, status):
@@ -28,4 +30,4 @@ if __name__ == "__main__":
 
     stream = Stream(auth, listener)
 
-    stream.filter(track=['trump'])
+    stream.filter(track=['ethereum'])

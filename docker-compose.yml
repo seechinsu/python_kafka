@@ -16,3 +16,38 @@ services:
       EULA: "https://dl.lenses.stream/d/?id=48c8183c-759c-40bb-be70-35311dd146b0"
       ADV_HOST: 127.0.0.1
       SAMPLEDATA: 0
+  solr:
+    container_name: solr
+    image: solr:7.1.0
+    ports:
+     - "8983:8983"
+     - "8984:8984"
+    volumes:
+     - ./solrconfigsets:/opt/solr/server/solr/configs
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr
+      - start
+      - -f
+      - -c
+      - -z
+      - zoo:2181
+      - -a
+      - "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=1044"
+    networks:
+      - core
+  zoo:
+    image: zookeeper
+    container_name: zoo
+    restart: always
+    hostname: zoo
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zoo:2888:3888
+    networks:
+      - core
+
+networks:
+  core:
