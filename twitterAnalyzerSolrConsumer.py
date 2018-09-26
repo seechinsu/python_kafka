@@ -16,6 +16,5 @@ if __name__ == '__main__':
                             api_version=(0, 10),
                             value_deserializer=lambda m: json.loads(m.decode('utf-8')))
     for msg in consumer:
-        print(msg.value)
-        # result = solr.add(msg.value)
-        # print(result);
+        result = solr.add([msg.value])
+        print(result);

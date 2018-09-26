@@ -30,4 +30,4 @@ if __name__ == "__main__":
 
     stream = Stream(auth, listener)
 
-    stream.filter(track=['ethereum'])
+    stream.filter(track=['cosby'])
