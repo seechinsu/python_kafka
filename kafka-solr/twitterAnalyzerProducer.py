@@ -2,21 +2,22 @@ from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 import json
-from kafka import KafkaProducer
+import pika
 import settings
 
-producer = KafkaProducer(bootstrap_servers='localhost:9092',
-                         api_version=(0, 10),
-                         key_serializer=lambda k: json.dumps(k).encode('utf-8'),
-                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-topic_name = 'tweets-kafka'
+credentials = pika.PlainCredentials('user','bitnami')
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672, credentials=credentials))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='twitter', exchange_type='fanout', durable=True)
+channel.queue_declare(queue='twitter-mongo-pika', durable=True)
+channel.queue_bind(exchange='twitter', queue='twitter-mongo-pika')
 
 class StdOutListener(StreamListener):
     def on_data(self, data):
         dictData = json.loads(data)
         value = {'tweet_id': dictData['id'], 'tweet': dictData['text']}
-        key = 'raw'
-        producer.send(topic_name, key=key, value=value)
+        channel.basic_publish(exchange='twitter', routing_key='', body=json.dumps(value))
         print(value)
         return True
 
@@ -30,4 +31,4 @@ if __name__ == "__main__":
 
     stream = Stream(auth, listener)
 
-    stream.filter(track=['cosby'])
+    stream.filter(track=['ethereum'])

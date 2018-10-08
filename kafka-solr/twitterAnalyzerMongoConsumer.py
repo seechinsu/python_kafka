@@ -8,10 +8,8 @@ from pymongo import MongoClient
 
 
 client = MongoClient('mongodb://localhost:27017/')
-
 db = client.tweets
-
-collection = db.trump
+collection = db.test
 
 if __name__ == '__main__':
     print('Consumer listening for messages...')
@@ -20,7 +18,9 @@ if __name__ == '__main__':
     consumer = KafkaConsumer(topic_name,
                             auto_offset_reset='earliest',
                             bootstrap_servers=['localhost:9092'],
-                            api_version=(0, 10))#, consumer_timeout_ms=1000)
+                            api_version=(0, 10),
+                            value_deserializer=lambda m: json.loads(m.decode('utf-8')))#, consumer_timeout_ms=1000)
 
     for msg in consumer:
-        print(msg.value.decode('utf-8'))
+        result = collection.insert_one(msg.value)
+        print(collection.find_one({'_id': result.inserted_id}))
