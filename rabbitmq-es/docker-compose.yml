@@ -1,23 +1,53 @@
-version: '2'
+version: '3'
 services:
+  neo4j:
+    image: neo4j
+    container_name: neo4j
+    volumes:
+      - ./neo4j/data:$HOME/neo4j/data
+      - ./neo4j/logs:$HOME/neo4j/logs
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    networks:
+      - core
+  rabbitmq:
+    image: 'bitnami/rabbitmq:latest'
+    container_name: rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    networks:
+      - core
   elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:6.4.1'
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
     container_name: elasticsearch
     environment:
       - "discovery.type=single-node"
     ports:
-     - "9200:9200"
-     - "9300:9300"
+      - "9200:9200"
+      - "9300:9300"
     networks:
-       - core
-  rabbitmq:
-     image: 'bitnami/rabbitmq:latest'
-     container_name: rabbitmq
-     ports:
-       - '5672:5672'
-       - '15672:15672'
-     networks:
-       - core
+      - core
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.4.2
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - core
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: fedhr_dwh
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sechien
+    ports:
+      - 5433:5432
+    networks:
+      - core
 
 networks:
   core:

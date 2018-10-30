@@ -11,7 +11,6 @@ channel = connection.channel()
 
 channel.exchange_declare(exchange='twitter', exchange_type='fanout', durable=True)
 channel.queue_declare(queue='twitter-mongo-pika', durable=True)
-channel.queue_bind(exchange='twitter', queue='twitter-mongo-pika')
 
 class StdOutListener(StreamListener):
     def on_data(self, data):
