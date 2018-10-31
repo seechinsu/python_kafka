@@ -10,7 +10,6 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost',
 channel = connection.channel()
 
 channel.exchange_declare(exchange='twitter', exchange_type='fanout', durable=True)
-channel.queue_declare(queue='twitter-mongo-pika', durable=True)
 
 class StdOutListener(StreamListener):
     def on_data(self, data):
@@ -33,4 +32,4 @@ if __name__ == "__main__":
 
     stream = Stream(auth, listener)
 
-    stream.filter(track=['marvel', 'trump', 'facebook'])
+    stream.filter(track=['trump','facebook','google','pittsburgh'])
