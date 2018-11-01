@@ -23,14 +23,31 @@ db_engine = create_engine(
 
 Session = scoped_session(sessionmaker(bind=db_engine))
 
-s = Session()
+class SQLAlchemySessionManager:
+    """
+    Create a scoped session for every request and close it when the request
+    ends.
+    """
 
-app = falcon.API()
+    def __init__(self, Session):
+        self.Session = Session
+
+    def process_resource(self, req, resp, resource, params):
+        resource.session = self.Session()
+
+    def process_response(self, req, resp, resource, req_succeeded):
+        if hasattr(resource, 'session'):
+            if not req_succeeded:
+                resource.session.rollback()
+            self.Session.remove()
+
+
+app = falcon.API(middleware=[SQLAlchemySessionManager(Session)])
 
 class AgencyResource:
     def on_get(self, req, resp):
 
-        results = s.execute('select * from users').fetchall()
+        results = Session.execute('select * from users').fetchall()
         resp.status = falcon.HTTP_200
         resp.body = json.dumps([dict(result) for result in results], default=json_serial)
 
