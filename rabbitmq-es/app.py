@@ -7,7 +7,7 @@ import json
 from datetime import date, datetime
 from sqlalchemy import Integer, ForeignKey, String, Column
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, joinedload, Load, with_polymorphic
 from marshmallow import fields
 from marshmallow_sqlalchemy import ModelSchema
 
@@ -56,9 +56,6 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     email = Column(String)
 
-    def __repr__(self):
-        return '<User(email={self.email!r})>'.format(self=self)
-
 class Profile(Base):
     __tablename__ = 'profiles'
     id = Column(Integer, primary_key=True)
@@ -69,7 +66,7 @@ class Profile(Base):
 class ProfileSchema(ModelSchema):
      class Meta:
         model = Profile
-        sqla_session = Session
+        # sqla_session = Session
 
 class UserSchema(ModelSchema):
     profile = fields.Nested(ProfileSchema, many=True)
@@ -81,9 +78,14 @@ profile_schema = ProfileSchema()
 
 class UserResource:
     def on_get(self, req, resp):
-        users = Session.query(User)
+        users = Session.query(User).all()
+        # profiles = users[2].profiles
+        # for profile in profiles:
+        #     print({'id':profile.id, 'title':profile.title})
         data, errors = user_schema.dump(users, many=True)
-        print(data)
+        for user in data:
+            print(user['profiles'])
+        # print(data)
         resp.status = falcon.HTTP_200
         if errors: 
             return json.dumps({"error": errors})
