@@ -66,26 +66,21 @@ class Profile(Base):
 class ProfileSchema(ModelSchema):
      class Meta:
         model = Profile
-        # sqla_session = Session
+        sqla_session = Session
 
 class UserSchema(ModelSchema):
-    profile = fields.Nested(ProfileSchema, many=True)
+    profiles = fields.Nested(ProfileSchema, many=True)
     class Meta:
         model = User
+        sqla_session = Session
 
 user_schema = UserSchema()
 profile_schema = ProfileSchema()
 
 class UserResource:
     def on_get(self, req, resp):
-        users = Session.query(User).all()
-        # profiles = users[2].profiles
-        # for profile in profiles:
-        #     print({'id':profile.id, 'title':profile.title})
+        users = Session.query(User).options(joinedload('profiles')).all()
         data, errors = user_schema.dump(users, many=True)
-        for user in data:
-            print(user['profiles'])
-        # print(data)
         resp.status = falcon.HTTP_200
         if errors: 
             return json.dumps({"error": errors})
