@@ -5,10 +5,10 @@ from sqlalchemy.orm import sessionmaker
 import settings
 import json
 from datetime import date, datetime
-from sqlalchemy import Integer, ForeignKey, String, Column
+from sqlalchemy import Integer, ForeignKey, String, Column, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref, joinedload, Load, with_polymorphic
-from marshmallow import fields
+from marshmallow import fields, Schema
 from marshmallow_sqlalchemy import ModelSchema
 
 # pip install gunicorn on mac, currently using waitress on windows
@@ -55,16 +55,16 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     email = Column(String)
+    profiles = relationship("Profile", lazy='joined')
 
 class Profile(Base):
     __tablename__ = 'profiles'
     id = Column(Integer, primary_key=True)
     title = Column(String)
     user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship("User", backref=backref('profiles'))
 
 class ProfileSchema(ModelSchema):
-     class Meta:
+    class Meta:
         model = Profile
         sqla_session = Session
 
@@ -74,12 +74,15 @@ class UserSchema(ModelSchema):
         model = User
         sqla_session = Session
 
+
 user_schema = UserSchema()
 profile_schema = ProfileSchema()
 
 class UserResource:
     def on_get(self, req, resp):
-        users = Session.query(User).options(joinedload('profiles')).all()
+        offset = req.get_param_as_int('offset') or 0
+        limit = req.get_param_as_int('limit') or 3
+        users = Session.query(User).limit(limit).offset(offset)
         data, errors = user_schema.dump(users, many=True)
         resp.status = falcon.HTTP_200
         if errors: 
@@ -87,14 +90,4 @@ class UserResource:
         resp.body = json.dumps(data, default=json_serial)
 
 
-class AgencyResource:
-    def on_get(self, req, resp):
-
-        results = Session.execute('select * from users').fetchall()
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps([dict(result) for result in results], default=json_serial)
-
-
-
-app.add_route('/agencies', AgencyResource())
 app.add_route('/users', UserResource())
