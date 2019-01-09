@@ -1,5 +1,29 @@
 version: '3'
 services:
+  cassandra:
+    image: datastax/dse-server:latest
+    container_name: cassandra
+    networks:
+      - cassandra_network
+    environment:
+      - "DS_LICENSE=accept"
+    ports:
+      - 9042:9042
+    networks:
+      - core
+  d-studio:
+    image: datastax/dse-studio:latest
+    container_name: dsestudio
+    links: 
+      - cassandra
+    networks:
+      - cassandra_network
+    environment:
+      - "DS_LICENSE=accept"
+    ports:
+      - 9091:9091
+    networks:
+      - core
   neo4j:
     image: neo4j
     container_name: neo4j
@@ -11,6 +35,22 @@ services:
       - "7687:7687"
     networks:
       - core
+  kafka-lenses-dev:
+    image: landoop/kafka-lenses-dev
+    container_name: kafka-lenses-dev
+    ports:
+      - "9092:9092"
+      - "2181:2181"
+      - "8081:8081"
+      - "9581:9581"
+      - "9582:9582"
+      - "9584:9584"
+      - "9585:9585"
+      - "3030:3030"
+    environment:
+      EULA: "https://dl.lenses.stream/d/?id=48c8183c-759c-40bb-be70-35311dd146b0"
+      ADV_HOST: 127.0.0.1
+      SAMPLEDATA: 0
   rabbitmq:
     image: 'bitnami/rabbitmq:latest'
     container_name: rabbitmq
@@ -41,7 +81,6 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_DB: fedhr_dwh
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: sechien
     ports:
