@@ -1,54 +1,51 @@
-version: '2'
+version: '3.3'
 services:
-  kafka-lenses-dev:
-    image: landoop/kafka-lenses-dev
-    container_name: kafka-lenses-dev
+  kafka:
+    image: obsidiandynamics/kafka
+    container_name: kafka
     ports:
-      - "9092:9092"
-      - "2181:2181"
-      - "8081:8081"
-      - "9581:9581"
-      - "9582:9582"
-      - "9584:9584"
-      - "9585:9585"
-      - "3030:3030"
+      - 2181:2181
+      - 9092:9092
     environment:
-      EULA: "https://dl.lenses.stream/d/?id=48c8183c-759c-40bb-be70-35311dd146b0"
-      ADV_HOST: 127.0.0.1
-      SAMPLEDATA: 0
-  solr:
-    container_name: solr
-    image: solr:7.1.0
+      KAFKA_LISTENERS: 'INTERNAL://:29092,EXTERNAL://:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+    networks:
+      - core
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
     ports:
-     - "8983:8983"
-     - "8984:8984"
+      - 9000:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
+    depends_on:
+      - kafka
+    networks:
+      - core
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: elasticsearch
+    environment:
+      - 'discovery.type=single-node'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    networks:
+      - core
+  mongodb:
+    image: mongo
+    container_name: mongodb
     volumes:
-     - ./solrconfigsets:/opt/solr/server/solr/configs
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr
-      - start
-      - -f
-      - -c
-      - -z
-      - zoo:2181
-      - -a
-      - "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=1044"
-    networks:
-      - core
-  zoo:
-    image: zookeeper
-    container_name: zoo
-    restart: always
-    hostname: zoo
+      - /data/db
     ports:
-      - 2182:2181
+      - '27017:27017'
     environment:
-      ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=zoo:2888:3888
+      MONGO_INITDB_ROOT_USERNAME: seech
+      MONGO_INITDB_ROOT_PASSWORD: sechien
+      MONGO_INITDB_DATABASE: twitter
     networks:
       - core
-
-
 networks:
   core:
