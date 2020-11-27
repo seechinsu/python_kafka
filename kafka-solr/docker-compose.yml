@@ -34,6 +34,14 @@ services:
       - '9300:9300'
     networks:
       - core
+  postgres:
+    image: postgres
+    restart: always
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - core
   mongodb:
     image: mongo
     container_name: mongodb
